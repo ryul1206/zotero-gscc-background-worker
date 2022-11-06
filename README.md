@@ -7,6 +7,8 @@ Docker container that fetches the number of citations from Google Scholar period
 If you want to update the citation count directly, not in the background, I recommend [Justin Ribeiro's Zotero extension](https://github.com/justinribeiro/zotero-google-scholar-citation-count).
 This background worker is compatible with his extension in most cases.
 
+> *CAUTION. This v1.0-beta1 is the initial rough version. As a result, if you configure a webhook to connect to Discord or Slack, you may receive many worthless messages.*
+
 ## Quickstart
 
 ### 1. Prepare `secret_cfg.yml`
