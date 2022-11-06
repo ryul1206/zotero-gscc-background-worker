@@ -48,8 +48,9 @@ class GSCC:
         Update a given item
         """
         # Fetch the query URL
+        print(f'\nUpdating [{item["data"]["title"]}] with')
         query_url = self._generate_query_url(item)
-        print(f'Updating [{item["data"]["title"]}] with \n\t{query_url}')
+        print(f'  {query_url}')
         resp = requests.get(query_url)
 
         # Error handling
@@ -104,11 +105,12 @@ class GSCC:
         query = title.replace(' ', '+')
         url = f'https://scholar.google.com/scholar?hl=en&as_q={query}&as_occt=title&num=1'
         # Filter by author
-        creators = item['data']['creators']
-        if creators:
-            creator = creators[0]
-            query = (creator['lastName'] if 'lastName' in creator else creator['name']).replace(' ', '+')
-            url += f'&as_sauthors={query}'
+        if 'creators' in item['data']:
+            creators = item['data']['creators']
+            if creators:
+                creator = creators[0]
+                query = (creator['lastName'] if 'lastName' in creator else creator['name']).replace(' ', '+')
+                url += f'&as_sauthors={query}'
         # Filter by year
         year = re.search(r'\d{4}', item['data']['date'])  # Extract year from date
         if year:
