@@ -37,6 +37,6 @@ class Webhook:
         self.data_key = _get_data_key(style)
 
     def send(self, msg_string):
-        # data = {self.data_key: msg_string}
-        # requests.post(self.webhook_url, headers=self.headers, json=data)
-        print(f"Webhook: {msg_string}")
+        data = {self.data_key: msg_string}
+        requests.post(self.webhook_url, headers=self.headers, json=data)
+        # print(f"Webhook: {msg_string}")
