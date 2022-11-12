@@ -1,45 +1,45 @@
 import yaml
-import gscc
 import webhook
-import datetime
-import pause
+import recaptcha
+import gscc
 
 
-# Parse secret_cfg.yaml
-def parse_secret_cfg(secret_cfg_fname):
-    with open(secret_cfg_fname) as f:
-        cfg = yaml.load(f, Loader=yaml.FullLoader)
-    gs = gscc.GSCC(cfg['user_id'], cfg['api_key'])
-    gs.set_sleep_range(cfg['min_sleep_sec'], cfg['max_sleep_sec'])
-    wh = webhook.Webhook(cfg['webhook_url'], cfg['webhook_style'])
-    sleep_range = (cfg['min_sleep_sec'], cfg['max_sleep_sec'])
-    day_cycle = cfg['day_cycle']
-    return gs, wh, sleep_range, day_cycle
+def _parse_cfg() -> gscc.GSCC:
+    # Open config file
+    try:
+        import sys
+        cfg_fname = sys.argv[1] if len(sys.argv) > 1 else '../secret_cfg.yml'
+        with open(cfg_fname) as f:
+            cfg = yaml.load(f, Loader=yaml.FullLoader)
+    except FileNotFoundError:
+        print(f"Could not find the config file: {cfg_fname}")
+        sys.exit(1)
+
+    # Webhook (Optional)
+    try:
+        wh = webhook.Webhook()
+        if 'webhook' in cfg:
+            wh.config_all(cfg['webhook'])
+    except KeyError as e:
+        print(f"[Webhook config] Could not find the key: {e}")
+        sys.exit(1)
+
+    # ReCaptcha (Required)
+    try:
+        rc = recaptcha.ReCaptcha(**cfg['captcha'])
+    except Exception as e:
+        print(f"[ReCaptcha config] {e}")
+        sys.exit(1)
+
+    # GSCC (Required)
+    try:
+        gs = gscc.GSCC(cfg['zotero'], cfg['update'], rc, wh)
+    except Exception as e:
+        print(f"[GSCC config] {e=}")
+        sys.exit(1)
+    return gs
 
 
-def main(secret_cfg_fname):
-    gs, wh, sleep_range, day_cycle = parse_secret_cfg(secret_cfg_fname)
-
-    while True:
-        # Start message
-        initial_count = gs.get_current_num_items()
-        estimated_hours = gs.get_estimated_fetch_time()
-        estimated_date = datetime.datetime.now() + datetime.timedelta(hours=estimated_hours)
-        wh.send(f"Starting to fetch {initial_count} items.\nEstimated time: {estimated_hours:0.2f} hours (to be completed at {estimated_date:%Y-%m-%d %H:%M})")
-
-        # Get next time to run
-        next_dt = datetime.datetime.now() + datetime.timedelta(days=day_cycle)
-
-        # Fetch all GSCC
-        gs.fetch_all(wh)
-
-        # Finish message
-        wh.send(f"Finished fetching all GSCC items. The next run will be started at {next_dt:%Y-%m-%d %H:%M}.")
-
-        # Pause until next update
-        pause.until(time=next_dt)
-
-
-if __name__=="__main__":
-    import sys
-    main(sys.argv[1] if len(sys.argv) > 1 else '../secret_cfg.yml')
+if __name__ == "__main__":
+    gs = _parse_cfg()
+    gs.run()
