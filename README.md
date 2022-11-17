@@ -1,8 +1,8 @@
-# Zotero GSCC Background Worker
+# ![gscc-favicon](imgs/favicon-small.png) Zotero GSCC Background Worker
 
 [![Docker Image Version](https://img.shields.io/docker/v/junghr1206/zotero-gscc-worker?style=flat-square&color=orange)](https://hub.docker.com/repository/docker/junghr1206/zotero-gscc-worker)
 
-Docker container that fetches the number of citations from Google Scholar periodically.
+GSCC-Worker is a Docker container that periodically fetches the number of citations from Google Scholar. (Cron style scheduling)
 
 If you want to update the citation count directly, not in the background, I recommend [Justin Ribeiro's Zotero extension](https://github.com/justinribeiro/zotero-google-scholar-citation-count).
 This background worker is compatible with his extension in most cases.
@@ -26,6 +26,8 @@ This background worker is compatible with his extension in most cases.
     ```sh
     docker run -d -e TZ=Asia/Seoul -v ${PWD}/secret_cfg.yml:/root/secret_cfg.yml:ro --name zotero-gscc-worker zotero-gscc-worker
     ```
+
+    (`-d` is for detached mode. If this is your first time, run without the `-d` option and make sure your `secret_cfg.yml` has no problems.)
 
 ## Build from Source
 

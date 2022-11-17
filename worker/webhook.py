@@ -33,16 +33,22 @@ class _DND:
         self._end_h = 8
         self._end_m = 0
 
-    def config_dnd_enabled(self, is_enabled: bool):
+    def config_all(self, dnd_cfg: dict):
+        if "enabled" in dnd_cfg:
+            self._config_enabled(dnd_cfg["enabled"])
+        if "start" in dnd_cfg:
+            self._config_start(dnd_cfg["start"])
+        if "end" in dnd_cfg:
+            self._config_end(dnd_cfg["end"])
+
+    def _config_enabled(self, is_enabled: bool):
         self._is_enabled = is_enabled
 
-    def config_dnd_start(self, start_h: int, start_m: int):
-        self._start_h = start_h
-        self._start_m = start_m
+    def _config_start(self, start: str):
+        self._start_h, self._start_m = tuple(map(int, start.split(":")))
 
-    def config_dnd_end(self, end_h: int, end_m: int):
-        self._end_h = end_h
-        self._end_m = end_m
+    def _config_end(self, end: str):
+        self._end_h, self._end_m = tuple(map(int, end.split(":")))
 
     def okay_to_send(self, now: datetime) -> bool:
         # True if DND is disabled
@@ -62,52 +68,54 @@ class Webhook:
         self._style = "discord"
         self._headers, self._data_key = _get_form(self._style)
         self._dnd = _DND()
+        self._balance_warning_enabled = False
+        self._balance_warning_threshold = 1.0
         self._msg_enabled = dict.fromkeys(msgstage_list(), False)
 
     def config_all(self, webhook_cfg: dict):
         if "url" in webhook_cfg:
-            self.config_url(webhook_cfg["url"])
+            self._config_url(webhook_cfg["url"])
         if "style" in webhook_cfg:
-            self.config_style(webhook_cfg["style"].lower())
+            self._config_style(webhook_cfg["style"].lower())
         if "do_not_disturb" in webhook_cfg:
-            dnd_cfg = webhook_cfg["do_not_disturb"]
-            if "enabled" in dnd_cfg:
-                self.config_dnd_enabled(dnd_cfg["enabled"])
-            if "start" in dnd_cfg:
-                self.config_dnd_start(dnd_cfg["start"])
-            if "end" in dnd_cfg:
-                self.config_dnd_end(dnd_cfg["end"])
+            self._dnd.config_all(webhook_cfg["do_not_disturb"])
+        if "2captcha_balance_warning" in webhook_cfg:
+            self._config_balance_warning(webhook_cfg["2captcha_balance_warning"])
         if "messages" in webhook_cfg:
-            self.config_messages(webhook_cfg["messages"])
+            self._config_messages(webhook_cfg["messages"])
 
-    def config_url(self, url: str):
+    def _config_url(self, url: str):
         self._webhook_url = url
 
-    def config_style(self, target_style: str):
+    def _config_style(self, target_style: str):
         target_style = target_style.lower()
         if target_style != self._style:
             self._headers, self._data_key = _get_form(target_style)
             self._style = target_style
 
-    def config_dnd_enabled(self, enabled: bool):
-        self._dnd.config_dnd_enabled(enabled)
+    def _config_balance_warning(self, balance_warning_cfg: dict):
+        if "enabled" in balance_warning_cfg:
+            self._balance_warning_enabled = balance_warning_cfg["enabled"]
+        if "threshold" in balance_warning_cfg:
+            self._balance_warning_threshold = balance_warning_cfg["threshold"]
 
-    def config_dnd_start(self, start: str):
-        self._dnd.config_dnd_start(*tuple(map(int, start.split(":"))))
-
-    def config_dnd_end(self, end: str):
-        self._dnd.config_dnd_end(*tuple(map(int, end.split(":"))))
-
-    def config_messages(self, msg_cfg: dict):
+    def _config_messages(self, msg_cfg: dict):
         for msg_stage, value in msg_cfg.items():
-            stage = msgstage_from_str(msg_stage)
-            if stage not in self._msg_enabled:
-                raise ValueError(f"Unknown message setting: {msg_stage}")
             if not isinstance(value, bool):
                 raise ValueError(f"Message setting must be boolean: {msg_stage}")
-            self._msg_enabled[stage] = value
+            self._msg_enabled[msgstage_from_str(msg_stage)] = value
 
-    def send(self, stage: MsgStage, msg_string: str):
+    def try_send(self, stage: MsgStage, msg_string: str):
         if self._msg_enabled[stage] and self._dnd.okay_to_send(datetime.now()):
-            data = {self._data_key: msg_string}
-            requests.post(self._webhook_url, headers=self._headers, json=data)
+            self._send(msg_string)
+
+    def try_balance_warning(self, balance: float):
+        if self._balance_warning_enabled and balance < self._balance_warning_threshold:
+            _msg = f"🆘 2Captcha balance is low: $ {balance:.2f}\n"
+            _msg += "Please refill your balance as soon as possible.\n"
+            _msg += "https://2captcha.com/enterpage#finances"
+            self._send(_msg)
+
+    def _send(self, msg_string: str):
+        data = {self._data_key: msg_string}
+        requests.post(self._webhook_url, headers=self._headers, json=data)

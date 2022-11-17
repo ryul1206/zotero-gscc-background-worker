@@ -21,8 +21,8 @@ captcha:
 update:
   epoch_cycle: "0 0 1 * *"  # Cron expression of “At 00:00 on day-of-month 1.”
   item_interval_seconds:
-    min: 30
-    max: 80
+    min: 45
+    max: 90
 
 # =============== OPTIONAL ===============
 # You can comment out the following section if you don't want to use it.
@@ -35,15 +35,18 @@ webhook:
     enabled: false
     start: "23:00"  # 24-hour format
     end: "08:00"  # 24-hour format
+  2captcha_balance_warning:
+    enabled: false
+    threshold: 1.0  # in USD (default: 1.0)
   messages:
-    dnd_start: false
-    dnd_end: false
     epoch_start: false
     epoch_end: false
     interval_sleep: false
-    item_success_with_change: false
+    item_success_gscc_increase: false
+    item_success_gscc_decrease: false
     item_success_without_change: false
     item_no_match: false
+    recaptcha_success: false
     error: false
 ```
 
