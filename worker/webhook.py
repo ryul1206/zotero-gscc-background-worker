@@ -1,9 +1,9 @@
 import requests
 from datetime import datetime
-from const import MsgStage
+from const import MsgStage, msgstage_from_str, msgstage_list
 
 
-def _get_form(webhook_style: str) -> tuple(dict, str):
+def _get_form(webhook_style: str) -> tuple:
     # headers & data_key
     style_book = {
         "slack": ({"Content-Type": "application/json"}, "text"),
@@ -46,10 +46,10 @@ class _DND:
 
     def okay_to_send(self, now: datetime) -> bool:
         # True if DND is disabled
-        if not self._dnd._is_enabled:
+        if not self._is_enabled:
             return True
-        start = datetime(now.year, now.month, now.day, self._dnd._start_h, self._dnd._start_m)
-        end = datetime(now.year, now.month, now.day, self._dnd._end_h, self._dnd._end_m)
+        start = datetime(now.year, now.month, now.day, self._start_h, self._start_m)
+        end = datetime(now.year, now.month, now.day, self._end_h, self._end_m)
         if end < start:
             return end <= now < start
         else:
@@ -62,9 +62,9 @@ class Webhook:
         self._style = "discord"
         self._headers, self._data_key = _get_form(self._style)
         self._dnd = _DND()
-        self._msg_enabled = dict.fromkeys(MsgStage.stages(), False)
+        self._msg_enabled = dict.fromkeys(msgstage_list(), False)
 
-    def config_all(webhook_cfg: dict):
+    def config_all(self, webhook_cfg: dict):
         if "url" in webhook_cfg:
             self.config_url(webhook_cfg["url"])
         if "style" in webhook_cfg:
@@ -100,7 +100,7 @@ class Webhook:
 
     def config_messages(self, msg_cfg: dict):
         for msg_stage, value in msg_cfg.items():
-            stage = MsgStage.from_str(msg_stage)
+            stage = msgstage_from_str(msg_stage)
             if stage not in self._msg_enabled:
                 raise ValueError(f"Unknown message setting: {msg_stage}")
             if not isinstance(value, bool):

@@ -26,7 +26,7 @@ def _parse_cfg() -> gscc.GSCC:
 
     # ReCaptcha (Required)
     try:
-        rc = recaptcha.ReCaptcha(**cfg['captcha'])
+        rc = recaptcha.ReCaptcha(cfg['captcha'])
     except Exception as e:
         print(f"[ReCaptcha config] {e}")
         sys.exit(1)

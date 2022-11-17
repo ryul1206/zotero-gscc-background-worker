@@ -6,6 +6,8 @@ import random
 from datetime import datetime, timedelta
 from croniter import croniter
 from const import MsgStage
+from recaptcha import ReCaptcha
+from webhook import Webhook
 
 
 def _generate_query_url(item: dict) -> str:
@@ -69,9 +71,11 @@ class GSCC:
             # Start message
             estimated_hours = self.estimated_fetch_hours
             estimated_date = datetime.now() + timedelta(hours=estimated_hours)
-            info = f"🚀 Starting GSCC worker.\n"
+            info = "______________________________________\n"
+            info += "🚀 Starting GSCC worker.\n"
             info += f"📚 {self.num_items} items to fetch. ({estimated_hours:0.1f} hours estimated)\n"
             info += f"🕒 Estimated completion time: {estimated_date.strftime('%Y-%m-%d %H:%M')}"
+            info += "______________________________________\n"
             self._webhook.send(MsgStage.EPOCH_START, info)
 
             # Fetch all GSCC
@@ -90,7 +94,8 @@ class GSCC:
             self.fetch_all(log)
 
             # Finish message
-            summary_msg = f"🎉 Finished GSCC worker.\n"
+            summary_msg = "______________________________________\n"
+            summary_msg += "🎉 Finished GSCC worker.\n"
 
             num_updated = log["success"]["updated"]
             num_unchanged = log["success"]["unchanged"]
@@ -101,6 +106,7 @@ class GSCC:
             summary_msg += f"📚 {self.num_items} items processed. (Updated: {num_updated}, Unchanged: {num_unchanged}, No match: {num_no_match})\n"
             summary_msg += f"🔐 {num_captcha_solved} CAPTCHAs solved. ({num_captcha_failed} failed)\n"
             summary_msg += f"⚠️ {num_error} errors."
+            summary_msg += "______________________________________\n"
 
             now_dt = datetime.now()
             cron = croniter(self._epoch_cron_format, now_dt)
@@ -201,7 +207,7 @@ class GSCC:
             except Exception as e:
                 if re.search(r'undergoing scheduled maintenance', str(e)):
                     hours = 1.0
-                    self._webhook.send(MsgStage.ERROR, f"⏳ Zotero API is undergoing scheduled maintenance. Try after {hours:0.1f} hours.")
+                    self._webhook.send(MsgStage.ERROR, f"🚧 Zotero API is undergoing scheduled maintenance. Will try after {hours:0.1f} hours.")
                     pause.hours(hours)
                 else:
                     log["error"] += 1
