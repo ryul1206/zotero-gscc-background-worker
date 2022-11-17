@@ -71,11 +71,11 @@ class GSCC:
             # Start message
             estimated_hours = self.estimated_fetch_hours
             estimated_date = datetime.now() + timedelta(hours=estimated_hours)
-            info = "______________________________________\n"
+            info = "___________\n"
             info += "🚀 Starting GSCC worker.\n"
             info += f"📚 {self.num_items} items to fetch. ({estimated_hours:0.1f} hours estimated)\n"
-            info += f"🕒 Estimated completion time: {estimated_date.strftime('%Y-%m-%d %H:%M')}"
-            info += "______________________________________\n"
+            info += f"🕒 Estimated completion time: {estimated_date.strftime('%Y-%m-%d %H:%M')}\n"
+            info += "___________\n"
             self._webhook.send(MsgStage.EPOCH_START, info)
 
             # Fetch all GSCC
@@ -94,7 +94,7 @@ class GSCC:
             self.fetch_all(log)
 
             # Finish message
-            summary_msg = "______________________________________\n"
+            summary_msg = "___________\n"
             summary_msg += "🎉 Finished GSCC worker.\n"
 
             num_updated = log["success"]["updated"]
@@ -105,8 +105,8 @@ class GSCC:
             num_error = log["error"]
             summary_msg += f"📚 {self.num_items} items processed. (Updated: {num_updated}, Unchanged: {num_unchanged}, No match: {num_no_match})\n"
             summary_msg += f"🔐 {num_captcha_solved} CAPTCHAs solved. ({num_captcha_failed} failed)\n"
-            summary_msg += f"⚠️ {num_error} errors."
-            summary_msg += "______________________________________\n"
+            summary_msg += f"⚠️ {num_error} errors.\n"
+            summary_msg += "___________\n\n"
 
             now_dt = datetime.now()
             cron = croniter(self._epoch_cron_format, now_dt)
