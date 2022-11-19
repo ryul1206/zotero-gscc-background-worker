@@ -1,0 +1,6 @@
+- spider 써서 recaptcha까지 잘 작동하도록. 아마 captcha 로직은 gscc에서 빼서 spider 콜백 같은 걸로 에러 핸들링 되게 넣어야 할 듯.
+
+squash merge 후, 새 브랜치
+- gscc에 webhook 관련 모두 logger.py 로 빼고, logger.py가 webhook instance 소유.
+- logger.py가 log를 [timestamp] messages. 형식으로 파일 저장가능하도록하고, cfg.yml로 설정 on/off 받기
+- 파일로 저장하는 log 설정에 메시지 개수로 저장 제한.
