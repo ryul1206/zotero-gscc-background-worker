@@ -1,5 +1,5 @@
 from pyzotero import zotero
-# from requests_html import HTMLSession
+from requests_html import HTMLSession
 import re
 import pause
 import random
@@ -150,7 +150,10 @@ class GSCC:
         query_url, query_info = _generate_query_url(item)
         # Fetch the query URL
         # TODO
-        response = requests.get(query_url)
+        session = HTMLSession()
+        response = session.get(query_url)
+        response.html.render(sleep=3, timeout=60)
+        # response = requests.get(query_url)
 
         # Abnormal response
         # TODO
@@ -165,9 +168,6 @@ class GSCC:
         # <h1>Please show you're not a robot</h1>
         # Sorry, we can't verify that you're not a robot when JavaScript is turned off.
         # Please enable JavaScript in your browser and reload this page.
-        # TODO
-        response.html.render()
-        pause.sleep(random.uniform(2, 5))
         _i = 0
         while re.search(r'Sorry, we can\'t verify that you\'re not a robot when JavaScript is turned off.', response.text):
             if i == 2:
@@ -180,9 +180,7 @@ class GSCC:
             # Retry
             # TODO
             response = requests.get(query_url)
-            # Render JavaScript
-            # TODO
-            response.html.render()
+            response.html.render(sleep=3, timeout=60)
             pause.sleep(random.uniform(2, 5))
             i += 1
 
@@ -212,6 +210,7 @@ class GSCC:
 
                 # TODO
                 response = requests.get(query_url)
+                response.html.render(sleep=3, timeout=60)
             else:
                 log["captcha"]["failed"] += 1
                 log["error"] += 1

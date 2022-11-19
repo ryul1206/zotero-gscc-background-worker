@@ -1,3 +1,4 @@
+from requests_html import HTMLResponse
 import requests
 import re
 from twocaptcha import TwoCaptcha
@@ -15,7 +16,7 @@ class ReCaptcha:
         """
         return self._captcha_solver.balance()
 
-    def solve(self, response: HTMLResponse, url: str) -> bool:
+    def solve(self, r: HTMLResponse, url: str) -> bool:
         """
         * Testing: "https://www.google.com/recaptcha/api2/demo"
         * Docs:    https://2captcha.com/2captcha-api#solving_recaptchav2_new
@@ -23,7 +24,7 @@ class ReCaptcha:
         """
         # Extract the sitekey
         # TODO
-        html = response.text
+        html = r.text
         site_key = re.search(r'data-sitekey="(.+?)"', html)
         if not site_key:
             raise Exception("Could not find sitekey")
